@@ -67,7 +67,7 @@ async function sendFileInRandomChunks(filePath, conn) {
 // Function to read and send file in fixed 320 byte chunks
 async function sendFileInChunks(filePath, conn) { 
     let count = 0
-    const readStream = fs.createReadStream(filePath, { highWaterMark: 3000 });
+    const readStream = fs.createReadStream(filePath, { highWaterMark: 320 });
     readStream.on('data', (chunk) => {
         count +=1  
         console.log(`Sending chunk ${count}, of size ${chunk.length} bytes`);
