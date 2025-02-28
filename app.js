@@ -26,14 +26,14 @@ app.post('/call', (req, res) => {
 
 
 app.post('/status', (req, res) => {
-  console.log(req.body)
+  //console.log(req.body)
   res.send('ok')
 })
 
 app.ws('/listen', function(conn, req) {
     console.log('Client connected');
     //setTimeout(sendFileInRandomChunks, 1000, filePath, conn);
-    setTimeout(sendFileInChunks, 1000, filePath, conn);
+    setTimeout(sendFileInChunks, 1000, filePath, conn, 112);
     //setTimeout(sendFile, 1000, filePath, conn);
     conn.on('close', function(){
         console.log('Client Disconnected')
@@ -48,7 +48,7 @@ async function sendFileInRandomChunks(filePath, conn) {
         readStream.on('data', (chunk) => {
             count +=1
             // Get a random size between 1 and min(3000, chunk.length)
-            const randomSize = Math.floor(Math.random() * Math.min(3000, chunk.length)) + 1;
+            const randomSize = Math.floor(Math.random() * Math.min(1500, chunk.length)) + 1;
             const partialChunk = chunk.slice(0, randomSize);
             byteCount += randomSize
             console.log(`Sending chunk ${count}, of size ${partialChunk.length} bytes`);
@@ -65,16 +65,19 @@ async function sendFileInRandomChunks(filePath, conn) {
         });
 }
 // Function to read and send file in fixed 320 byte chunks
-async function sendFileInChunks(filePath, conn) { 
+async function sendFileInChunks(filePath, conn, size) { 
     let count = 0
-    const readStream = fs.createReadStream(filePath, { highWaterMark: 320 });
+    let byteCount = 0
+    const readStream = fs.createReadStream(filePath, { highWaterMark: size });
     readStream.on('data', (chunk) => {
+        byteCount += chunk.length
         count +=1  
         console.log(`Sending chunk ${count}, of size ${chunk.length} bytes`);
         conn.send(chunk); 
     });
     readStream.on('end', () => {
         console.log('File transmission complete.');
+        console.log(`${byteCount} bytes sent`)
     });
 }
 
