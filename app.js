@@ -33,8 +33,8 @@ app.post('/status', (req, res) => {
 app.ws('/listen', function(conn, req) {
     console.log('Client connected');
     //setTimeout(sendFileInRandomChunks, 1000, filePath, conn);
-    setTimeout(sendFileInChunks, 1000, filePath, conn, 112);
-    //setTimeout(sendFile, 1000, filePath, conn);
+    setTimeout(sendFileInChunks, 1000, filePath, conn, 111);
+    //setTimeout(sendFile, 96000, filePath, conn);
     conn.on('close', function(){
         console.log('Client Disconnected')
     });
