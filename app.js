@@ -33,7 +33,7 @@ app.post('/status', (req, res) => {
 
 app.ws('/listen', function(conn, req) {
     console.log('Client connected');
-    setTimeout(outOfOrderOdd, 1000, filePath, conn);
+    setTimeout(outOfOrderEven, 1000, filePath, conn);
     //setTimeout(sendFileInChunks, 32000, filePath, conn);
     //setTimeout(sendFileInChunks, 64000, filePath, conn);
     //setTimeout(sendFile, 1000, filePath, conn);
@@ -82,6 +82,21 @@ async function outOfOrderOdd(filePath, conn){
     let chunkA = arrByte.slice(0, 338826) // first 338826 bytes
     let chunkB = arrByte.slice(338826, 338829) // next 3 bytes
     let chunkC = arrByte.slice(338829, 338830) // nest 1 byte
+    let chunkD = arrByte.slice(338830, 677656) // next 338826 bytes
+    let chunkE = arrByte.slice(677656) // last 338824 bytes
+    conn.send(chunkA)
+    conn.send(chunkB)
+    conn.send(chunkD)
+    conn.send(chunkC)
+    conn.send(chunkE)
+}
+
+async function outOfOrderEven(filePath, conn){
+    var raw = fs.readFileSync(filePath)
+    var arrByte = Uint8Array.from(raw)
+    let chunkA = arrByte.slice(0, 338826) // first 338826 bytes
+    let chunkB = arrByte.slice(338826, 338828) // next 2 bytes
+    let chunkC = arrByte.slice(338828, 338830) // nest 2 byte
     let chunkD = arrByte.slice(338830, 677656) // next 338826 bytes
     let chunkE = arrByte.slice(677656) // last 338824 bytes
     conn.send(chunkA)
