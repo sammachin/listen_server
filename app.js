@@ -4,22 +4,19 @@ const app = express()
 const expressWs = require('express-ws')(app);
 app.use(express.json());
 
-const filePath = "./crazyones.pcm"
+const filePath = "count-30.pcm"
 const port = 8000
 const splitSize = 5
 
 // Serve the JSON verbs to an answer webhook 
 app.post('/call', (req, res) => {
     data = [{
-            "verb": "say",
-            "text": "Connecting to Socket"
-        }, {
             "verb": "listen",
             "url": "/listen",
             "bidirectionalAudio" :{
                 "enabled" : true,
                 "streaming": true,
-                "sampleRate": 16000
+                "sampleRate": 8000
             }
         }]
   res.json(data)
@@ -33,7 +30,7 @@ app.post('/status', (req, res) => {
 
 app.ws('/listen', function(conn, req) {
     console.log('Client connected');
-    setTimeout(outOfOrderEven, 1000, filePath, conn);
+    markKill(filePath, conn);
     //setTimeout(sendFileInChunks, 32000, filePath, conn);
     //setTimeout(sendFileInChunks, 64000, filePath, conn);
     //setTimeout(sendFile, 1000, filePath, conn);
@@ -42,6 +39,11 @@ app.ws('/listen', function(conn, req) {
     conn.on('close', function(){
         console.log('Client Disconnected')
     });
+    conn.on('message', function message(data) {
+        if (typeof(data)== 'string'){
+            console.log(data)
+        }
+      });
 });
 	
 // Function to read and send file in chunks
@@ -104,6 +106,51 @@ async function outOfOrderEven(filePath, conn){
     conn.send(chunkD)
     conn.send(chunkC)
     conn.send(chunkE)
+}
+
+
+
+async function markKill(filePath, conn){
+    var raw = fs.readFileSync(filePath)
+    var arrByte = Uint8Array.from(raw)
+    let third = Math.floor(arrByte.length/3)
+    let chunkA = arrByte.slice(0, third) // first third bytes
+    let chunkB = arrByte.slice(third, third*2) // next third bytes
+    let chunkC = arrByte.slice(third*2) // last third bytes
+    setTimeout(mark, 100, 'chunkA-start', conn);
+    setTimeout(send, 100, chunkA, conn);
+    setTimeout(mark, 100, 'chunkA-end', conn);
+    setTimeout(killAudio, 5000, conn);
+    setTimeout(mark, 5000, 'chunkB-start', conn);
+    setTimeout(send, 5000, chunkB, conn);
+    setTimeout(mark, 5000, 'chunkB-end', conn);
+    setTimeout(mark, 6000, 'chunkC-start', conn);
+    setTimeout(send, 6000, chunkC, conn);
+    setTimeout(mark, 6000, 'chunkC-end', conn);
+
+}
+
+function send(data, conn){
+    conn.send(data)
+}
+
+function mark(data, conn){
+    conn.send(JSON.stringify(
+        {
+        "type": "mark",
+        "data": {
+          "name": data
+        }
+        }
+    ))
+}
+
+function killAudio(conn){
+    conn.send(JSON.stringify(
+      {
+        "type": "killAudio",
+      }
+    ))
 }
 
 app.listen(port, () => {
